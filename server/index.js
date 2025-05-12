@@ -70,6 +70,26 @@ app.get("/api/salas/:salaId/mensajes", (req, res) => {
   });
 });
 
+// ✅ NUEVO: POST /api/login → verifica si el usuario existe
+app.post("/api/login", (req, res) => {
+  const { nombre, email } = req.body;
+
+  fs.readFile(dbPath, "utf8", (err, data) => {
+    if (err) return res.status(500).json({ error: "Error al leer base de datos" });
+
+    const db = JSON.parse(data);
+    const usuario = db.usuarios.find(
+      (u) => u.nombre === nombre && u.email === email
+    );
+
+    if (usuario) {
+      res.status(200).json({ success: true });
+    } else {
+      res.status(401).json({ success: false });
+    }
+  });
+});
+
 // Ruta de prueba
 app.get("/", (req, res) => {
   res.send("Servidor actiu!");
