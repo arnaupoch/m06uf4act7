@@ -128,6 +128,27 @@
       "emisorId": "u1",
       "contenido": "fdsfg",
       "timestamp": "2025-05-06T17:20:08.351Z"
+    },
+    {
+      "id": "m1747414650738",
+      "salaId": "s1",
+      "emisorId": "u1",
+      "contenido": "Hola",
+      "timestamp": "2025-05-16T16:57:30.738Z"
+    },
+    {
+      "id": "m1747414678048",
+      "salaId": "s1",
+      "emisorId": "u1",
+      "contenido": "Adeu",
+      "timestamp": "2025-05-16T16:57:58.048Z"
+    },
+    {
+      "id": "m1747415774383",
+      "salaId": "s1",
+      "emisorId": "u1",
+      "contenido": "aaa",
+      "timestamp": "2025-05-16T17:16:14.383Z"
     }
   ]
 }

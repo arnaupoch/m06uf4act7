@@ -9,6 +9,9 @@ const app = express();
 const port = 4000;
 const dbPath = path.join(__dirname, "database.json");
 
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+
 app.use(cors());
 app.use(express.json());
 
@@ -97,4 +100,33 @@ app.get("/", (req, res) => {
 
 server.listen(port, () => {
   console.log(`Servidor escuchando en http://localhost:${port}`);
+});
+
+
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  const { salaId } = req.body;
+  const file = req.file;
+
+  // Aquí puedes guardar la información del archivo en la base de datos si es necesario
+
+  res.json({ success: true, filename: file.filename, originalname: file.originalname });
+});
+
+
+let documentoContenido = '';
+
+wss.on('connection', (ws) => {
+  ws.send(JSON.stringify({ type: 'documento', contenido: documentoContenido }));
+
+  ws.on('message', (message) => {
+    const data = JSON.parse(message);
+    if (data.type === 'documento') {
+      documentoContenido = data.contenido;
+      wss.clients.forEach((client) => {
+        if (client !== ws && client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ type: 'documento', contenido: documentoContenido }));
+        }
+      });
+    }
+  });
 });

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 
+
 const App: React.FC = () => {
   const [salaId, setSalaId] = useState("s1");
   const [socket, setSocket] = useState<WebSocket | null>(null);

@@ -1,22 +1,16 @@
 import React, { useEffect, useState } from "react";
+import FileUpload from './components/FileUpload';
+import DownloadHistory from './components/DownloadHistory';
+import CollaborativeEditor from './components/CollaborativeEditor';
 
-const App: React.FC = () => {
+const Xats: React.FC = () => {
   const [salaId, setSalaId] = useState("s1");
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
   const [input, setInput] = useState("");
 
-  // Cargar historial de la sala seleccionada
-  const cargarHistorial = (sala: string) => {
-    fetch(`http://localhost:4000/api/salas/${sala}/mensajes`)
-      .then(res => res.json())
-      .then(data => {
-        const textos = data.map((m: any) => `[${m.timestamp}] ${m.emisorId}: ${m.contenido}`);
-        setMessages(textos);
-      });
-  };
-
   useEffect(() => {
+    cargarHistorial(salaId);
     const ws = new WebSocket("ws://localhost:4000");
 
     ws.onopen = () => console.log("Conectado al WebSocket");
@@ -25,58 +19,101 @@ const App: React.FC = () => {
     };
 
     setSocket(ws);
-    cargarHistorial(salaId);
-
     return () => ws.close();
   }, []);
 
+  // Cambiar sala y cargar su historial
   const cambiarSala = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const nueva = e.target.value;
-    setSalaId(nueva);
-    cargarHistorial(nueva);
+    const nuevaSala = e.target.value;
+    setSalaId(nuevaSala);
+    cargarHistorial(nuevaSala);
   };
 
+  // Cargar historial desde el backend REST
+  const cargarHistorial = (sala: string) => {
+    fetch(`http://localhost:4000/api/salas/${sala}/mensajes`)
+      .then((res) => res.json())
+      .then((data) => {
+        const textos = data.map(
+          (m: any) => `[${m.timestamp}] ${m.emisorId}: ${m.contenido}`
+        );
+        setMessages(textos);
+      });
+  };
+
+  // Enviar mensaje vía REST
   const sendMessage = async () => {
-    if (!input) return;
+    if (!input.trim()) return;
+
     await fetch("http://localhost:4000/api/message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: input,
         salaId,
-        emisorId: "u1" // Usuario fijo por ahora
+        emisorId: "u1", // ID de usuario fijo
       }),
     });
+
     setInput("");
   };
 
   return (
-    <div>
-      <h1>Chat REST → WebSocket</h1>
+    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h1>UF4: Xat amb WebSocket + funcionalitats</h1>
 
-      <label htmlFor="sala">Selecciona una sala:</label>
-      <select id="sala" value={salaId} onChange={cambiarSala}>
-        <option value="s1">Sala del Profesor</option>
-        <option value="s2">Sala de Alumnos</option>
-        <option value="s3">Privado Ana - Luis</option>
-      </select>
+      {/* Selector de salas */}
+      <div style={{ marginBottom: "10px" }}>
+        <label htmlFor="sala">Sala: </label>
+        <select id="sala" value={salaId} onChange={cambiarSala}>
+          <option value="s1">Sala del Profesor</option>
+          <option value="s2">Sala de Alumnos</option>
+          <option value="s3">Privado Ana - Luis</option>
+        </select>
+      </div>
 
-      <div style={{ marginTop: "10px" }}>
+      {/* Input y envío de mensajes */}
+      <div style={{ marginBottom: "20px" }}>
         <input
+          type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Escribe un mensaje"
         />
-        <button onClick={sendMessage}>Enviar</button>
+        <button onClick={sendMessage} style={{ marginLeft: "10px" }}>
+          Envia
+        </button>
       </div>
 
-      <div style={{ marginTop: "20px" }}>
-        {messages.map((msg, i) => (
-          <p key={i}>{msg}</p>
-        ))}
+      {/* Área de mensajes */}
+      <div style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "20px", maxHeight: "200px", overflowY: "auto" }}>
+        {messages.length === 0 ? (
+          <p>Sense missatges en aquesta sala.</p>
+        ) : (
+          messages.map((msg, i) => <p key={i}>{msg}</p>)
+        )}
+      </div>
+      
+
+      {/* Funcionalidades adicionales */}
+      <div style={{ display: "flex", gap: "30px", flexWrap: "wrap" }}>
+        <div>
+          <h2>Pujada d'arxius</h2>
+          <FileUpload salaId={salaId} />
+        </div>
+
+        <div>
+          <h2>Descarrega l'historial</h2>
+          <DownloadHistory messages={messages} />
+        </div>
+
+        <div>
+          <h2>Document col·laboratiu</h2>
+          <CollaborativeEditor />
+        </div>
       </div>
     </div>
   );
 };
 
-export default App;
+export default Xats;
