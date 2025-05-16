@@ -8,6 +8,8 @@ const Xats: React.FC = () => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
   const [input, setInput] = useState("");
+  const [docEvents, setDocEvents] = useState<string[]>([]);
+
 
   useEffect(() => {
     cargarHistorial(salaId);
@@ -15,7 +17,17 @@ const Xats: React.FC = () => {
 
     ws.onopen = () => console.log("Conectado al WebSocket");
     ws.onmessage = (event) => {
-      setMessages((prev) => [...prev, event.data]);
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "documento") {
+          setDocEvents(prev => [...prev, `Actualización: ${data.contenido}`]);
+        } else {
+          setMessages(prev => [...prev, event.data]);
+        }
+      } catch {
+        setMessages((prev) => [...prev, event.data]);
+      }
     };
 
     setSocket(ws);
@@ -93,7 +105,7 @@ const Xats: React.FC = () => {
           messages.map((msg, i) => <p key={i}>{msg}</p>)
         )}
       </div>
-      
+
 
       {/* Funcionalidades adicionales */}
       <div style={{ display: "flex", gap: "30px", flexWrap: "wrap" }}>
@@ -110,6 +122,13 @@ const Xats: React.FC = () => {
         <div>
           <h2>Document col·laboratiu</h2>
           <CollaborativeEditor />
+          <div className="mt-6 p-4 bg-gray-100 rounded">
+            <h2 className="text-lg font-semibold mb-2">Canvis de document col·laboratiu:</h2>
+            {docEvents.map((event, i) => (
+              <p key={i} className="text-sm text-blue-700">{event}</p>
+            ))}
+          </div>
+
         </div>
       </div>
     </div>
